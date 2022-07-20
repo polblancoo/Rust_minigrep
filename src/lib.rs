@@ -26,14 +26,24 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(args: &[String]) -> Result<Config, &str> {
+    pub fn new(mut args: env::Args) -> Result<Config, & 'static str> {
         //Si no hay 3 argumentos salimos .
-        if args.len() < 3 {
-            return Err("No Hay suficientes argumentos");
-        }
+       // if args.len() < 3 {
+         //   return Err("No Hay suficientes argumentos(  1-search ,  2-documento");
+       // }
         // args[0] ---contiene el pathn del binario
-        let query: String = args[1].clone(); //segundo parametro pasado por linea de comandos.
-        let filename: String = args[2].clone();
+       // let query: String = args[1].clone(); //segundo parametro pasado por linea de comandos.
+        //let filename: String = args[2].clone();
+        args.next();
+        let query = match args.next() {
+            Some(arg) => arg,
+            None  => return Err("No hay parametros de busqueda"),
+        };
+        let filename = match args.next() {
+            Some(arg)=> arg,
+            None  => return Err("No hay archivo donde buscar...."),
+        };
+
         let case_sensitive = env::var("CASE_INSENSITIVE").is_err();
 
         //devuelve un Ok() type envolviendo el resultado una struct `Config`
@@ -53,17 +63,10 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 // no es case sensitive la busqueda
 pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
    
-    let query = query.to_lowercase();
-   // println!("{:?}", query2);
-    
-   let mut results = Vec::new();
-
-    for line in contents.lines() {
-        if line.to_lowercase().contains(&query) {
-            results.push(line);
-        }
-    }
-    results
+     contents
+        .lines()
+        .filter(|line| line.contains(query))
+        .collect()
 }
 
 #[cfg(test)]
